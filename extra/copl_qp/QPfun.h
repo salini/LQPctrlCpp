@@ -1,0 +1,64 @@
+clock_t  GetTime(void);
+char*    cAlloc(int);
+void     cFree(char**);
+int*     iAlloc(int);
+void     iFree(int**);
+double*  dAlloc(int);
+void     dFree(double**);
+char**   cPallo(int,int);
+void     cPfre(char***,int);
+int**    iPallo(int,int);
+void     iPfre(int***);
+double** dPallo(int,int);
+void     dPfre(double***);
+hashtab* hAlloc(int);
+void     hFree(hashtab**);
+matrix*  mAlloc(int,int);
+void     mFree(matrix**);
+symatx*  sAlloc(int,int);
+void     sFree(symatx**);
+optrow*  rAlloc(int);
+void     rFree(optrow**);
+chol*    chAllo(int);
+void     chFre(chol**);
+order*   oAlloc(int,int);
+void     oFree(order**);
+xlist*   xAlloc(int,int);
+void     xFree(xlist**);
+void     itAllo(int,int,int* x[]);
+void     itFre(int,int* x[]);
+
+void     ShutDown(int);
+int      DataInput(qppar*,qpdat*,char*);
+double   xtQx(symatx*,double*);
+void     QxPlusy(qpdat*,symatx*,double*,double*);
+int      PreProc(qppar*,qpdat*);
+void     LeftDots(char*,char*);
+
+int      SymboProc(qpdat*,qppar*);
+int      OdInit(order*,int*);
+void     OdIndex(order*,int,int);
+void     GetOrder(order*,int*);
+
+void     iZero(int,int*,int*);
+void     iSet(int,int,int*,int*);
+void     iSwap(int,int,int*);
+void     iCopy(int,int*,int*);
+int      iSum(int,int*);
+void     dCopy(int,double*,double*);
+void     dCat(int,int*,double*,double*);
+double   dDot(double*,double*,int);
+double   svDot(array*,double*);
+void     setArray(double,array*,double*);
+
+int      XtSucc(xlist*);
+void     XtDel(xlist*,int);
+void     XtPut(xlist*,int,int);
+int      XtLeast(xlist*);
+int      XtGet(xlist*,int*,int*);
+
+int      QpSolv(qpdat*,qppar*);
+int      CholFact(chol*,int*,double*,int);
+int      mTrans(int,matrix*,int,int*,int,matrix**);
+int      qTrans(int,symatx*,int,int*,int,symatx**);
+void     TriSolv(chol*,double*,double*);
