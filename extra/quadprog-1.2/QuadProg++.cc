@@ -1,30 +1,30 @@
 /* 
-File $Id: QuadProg++.cc 232 2007-06-21 12:29:00Z digasper $
  
  Author: Luca Di Gaspero
  DIEGM - University of Udine, Italy
  l.digaspero@uniud.it
  http://www.diegm.uniud.it/digaspero/
  
- LICENSE
+ LICENSE 
  
- Copyright 2006 Luca Di Gaspero
+ This file is part of QuadProg++: a C++ library implementing
+ the algorithm of Goldfarb and Idnani for the solution of a (convex) 
+ Quadratic Programming problem by means of an active-set dual method.
+ Copyright (C) 2007-2009 Luca Di Gaspero.
+ Copyright (C) 2009 Eric Moyer.  
  
- This file is part of QuadProg++.
- 
- QuadProg++ is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; either version 2 of the License, or
+ QuadProg++ is free software: you can redistribute it and/or modify
+ it under the terms of the GNU Lesser General Public License as published by
+ the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
  
  QuadProg++ is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+ GNU Lesser General Public License for more details.
  
- You should have received a copy of the GNU General Public License
- along with QuadProg++; if not, write to the Free Software
- Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ You should have received a copy of the GNU Lesser General Public License
+ along with QuadProg++. If not, see <http://www.gnu.org/licenses/>.
  
  */
 
@@ -36,7 +36,7 @@ File $Id: QuadProg++.cc 232 2007-06-21 12:29:00Z digasper $
 #include <stdexcept>
 #include "QuadProg++.hh"
 //#define TRACE_SOLVER
-
+namespace QuadProgPP{
 // Utility functions for updating some data needed by the solution method 
 void compute_d(Vector<double>& d, const Matrix<double>& J, const Vector<double>& np);
 void update_z(Vector<double>& z, const Matrix<double>& J, const Vector<double>& d, int iq);
@@ -57,10 +57,10 @@ double scalar_product(const Vector<double>& x, const Vector<double>& y);
 double distance(double a, double b);
 
 // Utility functions for printing vectors and matrices
-void print_matrix(char* name, const Matrix<double>& A, int n = -1, int m = -1);
+void print_matrix(const char* name, const Matrix<double>& A, int n = -1, int m = -1);
 
 template<typename T>
-void print_vector(char* name, const Vector<T>& v, int n = -1);
+void print_vector(const char* name, const Vector<T>& v, int n = -1);
 
 // The Solving function, implementing the Goldfarb-Idnani method
 
@@ -70,30 +70,50 @@ double solve_quadprog(Matrix<double>& G, Vector<double>& g0,
                       Vector<double>& x)
 {
   std::ostringstream msg;
+  {
+    //Ensure that the dimensions of the matrices and vectors can be
+    //safely converted from unsigned int into to int without overflow.
+    unsigned mx = std::numeric_limits<int>::max();
+    if(G.ncols() >= mx || G.nrows() >= mx || 
+       CE.nrows() >= mx || CE.ncols() >= mx ||
+       CI.nrows() >= mx || CI.ncols() >= mx || 
+       ci0.size() >= mx || ce0.size() >= mx || g0.size() >= mx){
+      msg << "The dimensions of one of the input matrices or vectors were "
+	  << "too large." << std::endl
+	  << "The maximum allowable size for inputs to solve_quadprog is:"
+	  << mx << std::endl;
+      throw std::logic_error(msg.str());
+    }
+  }
   int n = G.ncols(), p = CE.ncols(), m = CI.ncols();
-  if (G.nrows() != n)
+  if ((int)G.nrows() != n)
   {
-    msg << "The matrix G is not a squared matrix (" << G.nrows() << " x " << G.ncols() << ")";
+    msg << "The matrix G is not a square matrix (" << G.nrows() << " x " 
+	<< G.ncols() << ")";
     throw std::logic_error(msg.str());
   }
-  if (CE.nrows() != n)
+  if ((int)CE.nrows() != n)
   {
-    msg << "The matrix CE is incompatible (incorrect number of rows " << CE.nrows() << " , expecting " << n << ")";
+    msg << "The matrix CE is incompatible (incorrect number of rows " 
+	<< CE.nrows() << " , expecting " << n << ")";
     throw std::logic_error(msg.str());
   }
-  if (ce0.size() != p)
+  if ((int)ce0.size() != p)
   {
-    msg << "The vector ce0 is incompatible (incorrect dimension " << ce0.size() << ", expecting " << p << ")";
+    msg << "The vector ce0 is incompatible (incorrect dimension " 
+	<< ce0.size() << ", expecting " << p << ")";
     throw std::logic_error(msg.str());
   }
-  if (CI.nrows() != n)
+  if ((int)CI.nrows() != n)
   {
-    msg << "The matrix CI is incompatible (incorrect number of rows " << CI.nrows() << " , expecting " << n << ")";
+    msg << "The matrix CI is incompatible (incorrect number of rows " 
+	<< CI.nrows() << " , expecting " << n << ")";
     throw std::logic_error(msg.str());
   }
-  if (ci0.size() != m)
+  if ((int)ci0.size() != m)
   {
-    msg << "The vector ci0 is incompatible (incorrect dimension " << ci0.size() << ", expecting " << m << ")";
+    msg << "The vector ci0 is incompatible (incorrect dimension " 
+	<< ci0.size() << ", expecting " << m << ")";
     throw std::logic_error(msg.str());
   }
   x.resize(n);
@@ -492,7 +512,7 @@ inline void update_z(Vector<double>& z, const Matrix<double>& J, const Vector<do
 
 inline void update_r(const Matrix<double>& R, Vector<double>& r, const Vector<double>& d, int iq)
 {
-  register int i, j, n = d.size();
+  register int i, j;/*, n = d.size();*/
   register double sum;
   
   /* setting of r = R^-1 d */
@@ -661,15 +681,15 @@ inline double distance(double a, double b)
   if (a1 > b1) 
   {
     t = (b1 / a1);
-    return a1 * sqrt(1.0 + t * t);
+    return a1 * ::std::sqrt(1.0 + t * t);
   }
   else
     if (b1 > a1)
     {
       t = (a1 / b1);
-      return b1 * sqrt(1.0 + t * t);
+      return b1 * ::std::sqrt(1.0 + t * t);
     }
-  return a1 * sqrt(2.0);
+  return a1 * ::std::sqrt(2.0);
 }
 
 
@@ -707,7 +727,7 @@ void cholesky_decomposition(Matrix<double>& A)
           throw std::logic_error(os.str());
           exit(-1);
         }
-	      A[i][i] = sqrt(sum);
+	      A[i][i] = ::std::sqrt(sum);
 	    }
       else
         A[j][i] = sum / A[i][i];
@@ -756,7 +776,7 @@ inline void backward_elimination(const Matrix<double>& U, Vector<double>& x, con
   }
 }
 
-void print_matrix(char* name, const Matrix<double>& A, int n, int m)
+void print_matrix(const char* name, const Matrix<double>& A, int n, int m)
 {
   std::ostringstream s;
   std::string t;
@@ -780,7 +800,7 @@ void print_matrix(char* name, const Matrix<double>& A, int n, int m)
 }
 
 template<typename T>
-void print_vector(char* name, const Vector<T>& v, int n)
+void print_vector(const char* name, const Vector<T>& v, int n)
 {
   std::ostringstream s;
   std::string t;
@@ -796,4 +816,5 @@ void print_vector(char* name, const Vector<T>& v, int n)
   t = t.substr(0, t.size() - 2); // To remove the trailing space and comma
 	
   std::cout << t << std::endl;
+}
 }
