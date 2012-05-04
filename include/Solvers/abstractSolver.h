@@ -1,23 +1,33 @@
 #ifndef __LQPCTRLCPP_ABSTRACTSOLVER__
 #define __LQPCTRLCPP_ABSTRACTSOLVER__
 
+#include <Eigen/Dense>
 
 class AbstractSolver
 {
 public:
     AbstractSolver();
     virtual ~AbstractSolver();
-    
+
     virtual void initSolver(unsigned int _nProblem, unsigned int _nEquality, unsigned int _nInequality);
-    virtual void freeSolver();
-    virtual void setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h);
-    virtual void solveProblem();
+    virtual bool solveProblem();
+    virtual void setCostFunction(Eigen::MatrixXd& _P, Eigen::VectorXd& _q, double _c=0);
+    virtual void setEqualityConstraint(Eigen::MatrixXd& _A, Eigen::VectorXd& _b);
+    virtual void setInequalityConstraint(Eigen::MatrixXd& _G, Eigen::VectorXd& _h);
+
+    double          getCost();
+    Eigen::VectorXd getSolution();
 
 protected:
     unsigned int nProblem;
     unsigned int nEquality;
     unsigned int nInequality;
+    
+    double  cost;
+    Eigen::VectorXd x;
 };
+
+
 
 
 #include "QuadProg++.hh"
@@ -29,72 +39,37 @@ public:
     virtual ~solver_QuadProg();
     
     void initSolver(unsigned int _nProblem, unsigned int _nEquality, unsigned int _nInequality);
-    void freeSolver();
-    void setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h);
-    void solveProblem();
+    bool solveProblem();
+    void setCostFunction(Eigen::MatrixXd& _P, Eigen::VectorXd& _q, double _c=0);
+    void setEqualityConstraint(Eigen::MatrixXd& _A, Eigen::VectorXd& _b);
+    void setInequalityConstraint(Eigen::MatrixXd& _G, Eigen::VectorXd& _h);
+    
 
 private:
-    Matrix<double> P;   // cost function
-    Vector<double> q;
+    QuadProgPP::Matrix<double> P;   // cost function
+    QuadProgPP::Vector<double> q;
+    double                     c;
     
-    Matrix<double> A;   // equality constraints
-    Vector<double> b;
+    QuadProgPP::Matrix<double> A;   // equality constraints
+    QuadProgPP::Vector<double> b;
     
-    Matrix<double> G;   // inequality constraints
-    Vector<double> h;
+    QuadProgPP::Matrix<double> G;   // inequality constraints
+    QuadProgPP::Vector<double> h;
     
-    Vector<double> x;   // solution vector
+    QuadProgPP::Vector<double> QuadProgx;   // solution vector
 };
 
 
-
-
-#include <CGAL/basic.h>
-#include <CGAL/QP_models.h>
-
-class solver_CGAL: public AbstractSolver
+class solver_Mosek: public AbstractSolver
 {
 public:
-    solver_CGAL();
-    virtual ~solver_CGAL();
+    solver_Mosek();
+    virtual ~solver_Mosek();
     
     void initSolver(unsigned int _nProblem, unsigned int _nEquality, unsigned int _nInequality);
-    void freeSolver();
-    void setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h);
-    void solveProblem();
-
-private:
-    unsigned int nConstraint;
-
-    double** P;     // cost function
-    double*  q;
+    bool solveProblem();
+    void setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h, double _c=0);
     
-    double** AG;    // it concatenates the equality and inequality constraints
-    double*  bh;
-    
-    CGAL::Comparison_result* r;
-    
-    bool*  fl;
-    bool*  fu;
-    double*  l;
-    double*  u;
-    
-    double* x;       // solution vector
 };
-
-
-
-class solver_COPL_QP: public AbstractSolver
-{
-public:
-    solver_COPL_QP();
-    virtual ~solver_COPL_QP();
-    
-    void initSolver(unsigned int _nProblem, unsigned int _nEquality, unsigned int _nInequality);
-    void freeSolver();
-    void setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h);
-    void solveProblem();
-};
-
 
 #endif

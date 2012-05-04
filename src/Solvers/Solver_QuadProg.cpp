@@ -24,12 +24,10 @@ solver_QuadProg::~solver_QuadProg()
 void solver_QuadProg::initSolver(unsigned int _nProblem, unsigned int _nEquality, unsigned int _nInequality)
 {
     AbstractSolver::initSolver(_nProblem, _nEquality, _nInequality);
-//    nProblem    = _nProblem;
-//    nEquality   = _nEquality;
-//    nInequality = _nInequality;
 
     P.resize(nProblem, nProblem);
     q.resize(nProblem);
+    c = 0;
     
     A.resize(nProblem, nEquality);
     b.resize(nEquality);
@@ -37,12 +35,7 @@ void solver_QuadProg::initSolver(unsigned int _nProblem, unsigned int _nEquality
     G.resize(nProblem, nInequality);
     h.resize(nInequality);
     
-    x.resize(nProblem);
-}
-
-void solver_QuadProg::freeSolver()
-{
-
+    QuadProgx.resize(nProblem);
 }
 
 
@@ -56,49 +49,50 @@ void solver_QuadProg::freeSolver()
  *     G.X + h >= 0
  *
  */
-void solver_QuadProg::setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h)
+void solver_QuadProg::setCostFunction(Eigen::MatrixXd& _P, Eigen::VectorXd& _q, double _c)
 {
-    int i, j;
-    
-    double _Pcw[nProblem*nProblem];
-    double _Acw[nProblem*nProblem];
-    double _Gcw[nProblem*nProblem];
-    
-    for (i=0; i<nProblem; i++)
-        for (j=0; j<nProblem; j++)
-            _Pcw[j*nProblem+i] = _P[i*nProblem+j];
-    
-    for (i=0; i<nEquality; i++)
-        for (j=0; j<nProblem; j++)
-            _Acw[j*nEquality+i] = -_A[i*nProblem+j];
+    P.set(_P.data(), nProblem, nProblem);
+    q.set(_q.data(), nProblem);
+    c = _c;
+}
 
-    for (i=0; i<nInequality; i++)
-        for (j=0; j<nProblem; j++)
-            _Gcw[j*nInequality+i] = -_G[i*nProblem+j];
-
-
-    P.set(_Pcw, nProblem, nProblem);
-    q.set(_q, nProblem);
-    
-    A.set(_Acw, nProblem, nEquality);
-    b.set(_b, nEquality);
-    
-    G.set(_Gcw, nProblem, nInequality);
-    h.set(_h, nInequality);
-    
-//    std::cout<<"P:"<<std::endl<<P<<std::endl;
-//    std::cout<<"q:"<<std::endl<<q<<std::endl;
-//    std::cout<<"A:"<<std::endl<<A<<std::endl;
-//    std::cout<<"b:"<<std::endl<<b<<std::endl;
-//    std::cout<<"G:"<<std::endl<<G<<std::endl;
-//    std::cout<<"h:"<<std::endl<<h<<std::endl;
+void solver_QuadProg::setEqualityConstraint(Eigen::MatrixXd& _A, Eigen::VectorXd& _b)
+{
+    A.set(_A.data(), nProblem, nEquality);
+    b.set(Eigen::VectorXd(-_b).data(), nEquality);
 }
 
 
-void solver_QuadProg::solveProblem()
+void solver_QuadProg::setInequalityConstraint(Eigen::MatrixXd& _G, Eigen::VectorXd& _h)
 {
-    std::cout << "f: " << solve_quadprog(P, q, A, b, G, h, x) << std::endl;
-    std::cout << "x: " << x << std::endl;
+    G.set(Eigen::MatrixXd(-_G).data(), nProblem, nInequality);
+    h.set(_h.data(), nInequality);
+}
+
+#include <stdexcept>
+
+bool solver_QuadProg::solveProblem()
+{
+    try
+    {
+        cost = QuadProgPP::solve_quadprog(P, q, A, b, G, h, QuadProgx);
+    }
+    catch ( std::logic_error logErr )
+    {
+        std::cout<<"ERROR: QuadProg solver failed! "<<logErr.what()<<std::endl;
+        return false;
+    }
+    catch (std::runtime_error logErr )
+    {
+        std::cout<<"ERROR: QuadProg solver failed! "<<logErr.what()<<std::endl;
+        return false;
+    }
+    
+    for (int i=0; i<nProblem; i++)
+        x[i] = QuadProgx[i];
+
+    return true;
+    
 }
 #else
 
@@ -112,14 +106,15 @@ void solver_QuadProg::freeSolver()
 
 }
 
-void solver_QuadProg::setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h)
+void solver_QuadProg::setProblem(double* _P, double* _q, double* _A, double* _b, double* _G, double* _h, double _c)
 {
 
 }
 
-void solver_QuadProg::solve()
+bool solver_QuadProg::solveProblem()
 {
     std::cout<<"QuadProg++ solver has not been implemented..."<<std::endl;
+    return false;
 }
 #endif
 

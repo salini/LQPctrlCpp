@@ -5,6 +5,7 @@
 #
 ################################################################################
 add_subdirectory(Solvers)
+add_subdirectory(test)
 
 add_library( genericSolver
     genericSolver.cpp

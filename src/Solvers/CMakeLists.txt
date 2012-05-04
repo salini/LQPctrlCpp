@@ -5,24 +5,7 @@ add_library( abstractSolver
 )
 
 target_link_libraries( abstractSolver
-    Solver_CGAL
     Solver_QuadProg
-    Solver_COPL_QP
-)
-
-
-################################################################################
-#
-# Create CGAL Library
-#
-################################################################################
-add_library( Solver_CGAL
-    Solver_CGAL.cpp
-)
-target_link_libraries( Solver_CGAL
-    abstractSolver
-    ${CGAL_LIB}
-    ${GMPXX_LIBRARIES}
 )
 
 
@@ -51,28 +34,5 @@ target_link_libraries( Solver_QuadProg
 #)
 
 
-#################################################################################
-##
-## Create COPL_QP Library
-##
-#################################################################################
-add_library( Solver_COPL_QP
-    Solver_COPL_QP.cpp
-)
-target_link_libraries( Solver_COPL_QP
-    abstractSolver
-    COPL_QP
-)
 
-
-#################################################################################
-##
-## Create OOQP Library
-##
-#################################################################################
-#add_library( Solver_OOQP
-#    Solver_OOQP.cpp
-#)
-#target_link_libraries( Solver_OOQP
-#)
 

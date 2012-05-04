@@ -4,6 +4,5 @@
 # Create extra libraries
 #
 ################################################################################
-add_subdirectory(quadprog-1.1)
-add_subdirectory(copl_qp)
+add_subdirectory(quadprog-1.2)
 
