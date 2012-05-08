@@ -23,6 +23,8 @@ add_definitions(-DQUADPROG_IS_AVAILABLE)
 
 find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
+
+
 ##### Search for Mosek package
 #if(MOSEK_FOUND)
 #    message(STATUS "MOSEK package found.")
