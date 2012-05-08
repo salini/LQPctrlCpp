@@ -1,6 +1,6 @@
 
 
-#include "genericSolver.h"
+#include "Solver.h"
 
 #include <Eigen/Dense>
 
